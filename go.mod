@@ -1,14 +1,15 @@
 module github.com/aniruddha-chakraborty/hiring-software-engineer-task-test
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.11
+require (
+	github.com/ClickHouse/clickhouse-go/v2 v2.39.0
+	github.com/davecgh/go-spew v1.1.1
+)
 
 require (
 	github.com/ClickHouse/ch-go v0.67.0 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.39.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect

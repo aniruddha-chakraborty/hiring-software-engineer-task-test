@@ -1,6 +1,6 @@
-# Ad Bidding Service & Test Suite
+# Ad Bidding Service Test Suite
 
-This repository contains a simple test procedure Ad Bidding Service.
+This repository contains a simple test procedure of Ad Bidding Service.
 
 ## Prerequisites
 
@@ -9,14 +9,8 @@ Before you begin, ensure you have the following installed:
 
 ## 🚀 Setup & Running
 
-Getting the entire environment running is simple.
-
-1.  **Clone the Repository**
-    ```bash
-    git clone <your-repository-url>
-    cd <your-repository-folder>
-    ```
-2.  **Download Dependencies for the Test Tool**
+Getting the entire environment running is simple.  
+**Download Dependencies for the Test Tool**
     Before running the test tool for the first time, download its dependencies:
     ```bash
     go mod tidy

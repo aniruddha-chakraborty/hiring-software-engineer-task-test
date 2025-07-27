@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"io"
 	"math/rand"
 	"net/http"
@@ -403,7 +404,6 @@ func runE2ETrackingTest() {
 	// --- 2. Send Tracking Events ---
 	fmt.Println("\n[PHASE 2] Sending tracking events to the API...")
 	numEventsToSend := 15
-	sentCount := 0
 
 	resp, err := http.Get("http://localhost:8080/api/v1/lineitems")
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -418,12 +418,12 @@ func runE2ETrackingTest() {
 	}
 	resp.Body.Close()
 	itemToTrack := items[0]
-	i := 0
-	for ; i < numEventsToSend; i++ {
+	var sentCount int
+	for sentCount = 0; sentCount < numEventsToSend; sentCount++ {
 		event := TrackingEvent{
 			EventType:  "impression",
 			LineItemID: itemToTrack.ID,
-			UserID:     "e2e-count-test-user",
+			UserID:     fmt.Sprintf("e2e-user-%d", sentCount+1), // Make each user slightly different
 			Placement:  itemToTrack.Placement,
 			Metadata: map[string]string{
 				"browser": "safari",
@@ -431,20 +431,25 @@ func runE2ETrackingTest() {
 			},
 		}
 		jsonData, _ := json.Marshal(event)
+
+		// NEW: Print the curl command for this specific request
+		fmt.Printf("\n--- Curl Request #%d ---\n", sentCount+1)
+		fmt.Printf("curl -X POST 'http://localhost:8080/api/v1/tracking' -H 'Content-Type: application/json' -d '%s'\n", string(jsonData))
+
 		resp, err := http.Post("http://localhost:8080/api/v1/tracking", "application/json", bytes.NewBuffer(jsonData))
 		if err == nil && resp.StatusCode == http.StatusAccepted {
-			sentCount++
+			spew.Dump(err.Error())
 		}
 		if resp != nil {
 			resp.Body.Close()
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	fmt.Printf("  - Successfully sent %d tracking events.\n", i)
+	fmt.Printf("\n  - Successfully sent %d tracking events.\n", sentCount)
 
 	// --- 3. Wait for Pipeline Processing ---
 	fmt.Println("\n[PHASE 3] Waiting 15 seconds for Kafka and ClickHouse to ingest the data...")
-	time.Sleep(15 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	// --- 4. Query ClickHouse to Verify Final Count ---
 	fmt.Println("\n[PHASE 4] Querying ClickHouse for final row count...")
@@ -474,8 +479,8 @@ func runE2ETrackingTest() {
 	// --- 5. Compare and Report Result ---
 	ingestedCount := finalCount - initialCount
 	fmt.Println("\n[RESULT]")
-	if i == int(ingestedCount) {
-		fmt.Printf("  ✅ PASS: Sent %d events. Row count correctly increased from %d to %d.\n", i, initialCount, finalCount)
+	if sentCount == int(ingestedCount) {
+		fmt.Printf("  ✅ PASS: Sent %d events. Row count correctly increased from %d to %d.\n", sentCount, initialCount, finalCount)
 	} else {
 		fmt.Printf("  ❌ FAIL: Mismatch! Sent %d events, but row count only increased by %d (from %d to %d).\n", sentCount, ingestedCount, initialCount, finalCount)
 	}
